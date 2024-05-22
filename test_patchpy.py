@@ -5,7 +5,8 @@ import tempfile
 from patchpy import Hunk, FileModification, DiffFile, PatchPyError, ModificationKind
 
 # Sample diff for testing
-sample_diff = """--- a/sample.txt
+sample_diff = """diff --git a/sample.txt b/sample.txt
+--- a/sample.txt
 +++ b/sample.txt
 @@ -1,3 +1,4 @@
  Line 1
@@ -15,7 +16,8 @@ sample_diff = """--- a/sample.txt
 """
 
 # Sample diff with multiple hunks
-sample_diff_multi_hunk = """--- a/sample.txt
+sample_diff_multi_hunk = """diff --git a/sample.txt b/sample.txt
+--- a/sample.txt
 +++ b/sample.txt
 @@ -1,3 +1,4 @@
  Line 1
@@ -53,7 +55,8 @@ sample_diff_with_prefix = """--- foo/sample.txt
 
 
 # Sample invalid diff
-sample_invalid_diff = """--- a/sample.txt
+sample_invalid_diff = """diff --git a/sample.txt b/sample.txt
+--- a/sample.txt
 +++ b/sample.txt
 @@ -1,3 +1,4 @@
  Line 1
@@ -62,7 +65,8 @@ sample_invalid_diff = """--- a/sample.txt
  Line 4
 """
 
-sample_diff_with_escaping_path = """--- "foo/../../sample.txt
+sample_diff_with_escaping_path = """diff --git "foo/../../sample.txt" "bar/../../sample.txt"
+--- "foo/../../sample.txt
 +++ "bar/../../sample.txt
 @@ -1,3 +1,4 @@
  Line 1
@@ -73,7 +77,7 @@ sample_diff_with_escaping_path = """--- "foo/../../sample.txt
 
 
 def test_hunk_parsing():
-    hunk = Hunk.parse(''.join(sample_diff.splitlines(keepends=True)[2:]))
+    hunk = Hunk.parse('@@ ' + sample_diff.split('@@ ', 1)[1])
     assert hunk.original_start == 1
     assert hunk.original_length == 3
     assert hunk.new_start == 1
@@ -122,7 +126,8 @@ def test_diff_file_reversed():
     reversed_diff = diff_file.reversed()
     assert (
         reversed_diff.to_string()
-        == """--- a/sample.txt
+        == """diff --git a/sample.txt b/sample.txt
+--- a/sample.txt
 +++ b/sample.txt
 @@ -1,4 +1,3 @@
  Line 1
@@ -201,3 +206,27 @@ def test_apply_with_revert():
 def test_apply_with_escaping_path():
     with pytest.raises(PatchPyError):
         DiffFile.from_string(sample_diff_with_escaping_path).validate()
+
+
+def test_diff_with_empty_source():
+    diff_file = DiffFile.from_string(
+        """diff --git a/sample.txt b/sample.txt
+--- /dev/null
++++ b/sample.txt
+@@ -0,0 +1,4 @@
++Line 1
++Line 2
++Line 3
++Line 4
+"""
+    )
+    assert len(diff_file.modifications) == 1
+    mod = diff_file.modifications[0]
+    assert mod.source is None
+    assert mod.target == 'sample.txt'
+    assert len(mod.hunks) == 1
+    # Apply the diff
+    with tempfile.TemporaryDirectory() as tempdir:
+        diff_file.apply(root=tempdir)
+        sample_path = Path(tempdir) / 'sample.txt'
+        assert sample_path.read_text() == 'Line 1\nLine 2\nLine 3\nLine 4\n'

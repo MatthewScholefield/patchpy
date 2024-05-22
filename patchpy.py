@@ -196,8 +196,6 @@ class FileModification(ParsedObj):
         )
         if source_path and not source_path.exists():
             raise PatchPyError(f'Source file {source_path} does not exist')
-        if target_path and not target_path.exists():
-            raise PatchPyError(f'Target file {target_path} does not exist')
         if not self.source and not self.target:
             return
         if self.source and not self.target:
@@ -273,9 +271,9 @@ class FileModification(ParsedObj):
         source = cls._decode_path(source)
         target = cls._decode_path(target)
         kind = ModificationKind.REGULAR
-        if source.startswith('a/') and target.startswith('b/'):
-            source = source.removeprefix('a/')
-            target = target.removeprefix('b/')
+        if header and header[0].startswith('diff --git'):
+            source = source.removeprefix('a/') if source else None
+            target = target.removeprefix('b/') if target else None
             kind = ModificationKind.GIT
         hunks = []
         while lines and lines.peek().startswith('@@ '):
