@@ -1,6 +1,6 @@
 [project]
 name = "patchpy"
-version = "2.0.2"
+version = "2.0.3"
 description = "A modern Python library for patch file parsing (diff file parsing)"
 authors = [
     { name = "Matthew D. Scholefield", email = "matthew331199@gmail.com" },

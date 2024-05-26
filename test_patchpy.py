@@ -230,3 +230,33 @@ def test_diff_with_empty_source():
         diff_file.apply(root=tempdir)
         sample_path = Path(tempdir) / 'sample.txt'
         assert sample_path.read_text() == 'Line 1\nLine 2\nLine 3\nLine 4\n'
+
+
+def test_git_commit_diff():
+    diff_file = DiffFile.from_string(
+        """From 83db48f7b3b3b7b3b7b3b7b3b7b3b7b3b7b3b7b3 Mon Sep 17 00:00:00 2001
+From: Author <123456+abc@users.no-reply.github.com>
+Date: Fri, 1 Jan 2021 00:00:00 +0000
+Subject: [PATCH] Commit message
+
+---------
+
+Co-authored-by: Co-author <123456+def@users.no-reply.github.com>
+---
+ sample.txt | 1 +
+1 file changed, 1 insertion(+)
+
+diff --git a/sample.txt b/sample.txt
+index 83db48f..f735c3d 100644
+--- a/sample.txt
++++ b/sample.txt
+@@ -1,3 +1,4 @@
+ Line 1
+ Line 2
+ Line 3
++Line 4
+"""
+    )
+    assert len(diff_file.modifications) == 1
+    assert diff_file.modifications[0].kind == ModificationKind.GIT
+    assert diff_file.modifications[0].source == 'sample.txt'

@@ -271,7 +271,7 @@ class FileModification(ParsedObj):
         source = cls._decode_path(source)
         target = cls._decode_path(target)
         kind = ModificationKind.REGULAR
-        if header and header[0].startswith('diff --git'):
+        if header and re.search(r'^diff --git ', '\n'.join(header), re.MULTILINE):
             source = source.removeprefix('a/') if source else None
             target = target.removeprefix('b/') if target else None
             kind = ModificationKind.GIT
